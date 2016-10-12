@@ -24,7 +24,7 @@ namespace {
     {6 ,5 ,4 ,3 ,5 ,4 ,3 ,2 ,4 ,3 ,2 ,1 ,3 ,2 ,1 ,0}
   };
 
-  boost::object_pool<State> Spool(1024);
+  boost::object_pool<State> Spool(100000);
 }
 
 State::State() {}
