@@ -1,3 +1,5 @@
+#include <vector>
+
 class State {
 private:
   static const int PUZZLE_SIZE = 16;
@@ -10,11 +12,11 @@ public:
   bool is_goal;
   char tiles[16];
 
-  State(char[], char);
+  State();
 
-  void initial();
+  void initial(char[], char);
   inline const int f();
-  const void make_kid(State*);
+  const void make_kid(State*, char);
   const void expand(std::vector<State*>&);
   inline const std::string state_to_string();
   const void print();

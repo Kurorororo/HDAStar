@@ -19,15 +19,15 @@ AStar::AStar() {
 }
 
 void AStar::update_min() {
-  if (open[min].size() == 0) {
-    for(auto &pair:open){
-      if (pair.second.size() > 0) {
-        min = pair.first;
+  if (open[min].empty()) {
+    for(int i=0; i<200; ++i){
+      if (!open[i].empty()) {
+        min = i;
         break;
       }
      }
 
-    if (open[min].size() == 0) {
+    if (open[min].empty()) {
       min = -1;
     }
   }
@@ -37,7 +37,7 @@ void AStar::distribute_kids(vector<State*> &temp) {
   auto itr = temp.begin();
   while (itr != temp.end()) {
     if(closed[(*itr)->state_to_string()] > 0) {
-      delete(*itr);
+      Spool.destroy(*itr);
       itr = temp.erase(itr);
       continue;
     }
@@ -52,9 +52,10 @@ void AStar::distribute_kids(vector<State*> &temp) {
   }
 }
 
-int AStar::solve(char initial_tiles[], int initial_blank) {
-  State* s = new State(initial_tiles, 0);
-  s->initial();
+int AStar::solve(char initial_tiles[], char initial_blank) {
+  auto compare = [](State* l, State* r){ return l->g > r->g; };
+  State* s = Spool.construct();
+  s->initial(initial_tiles, initial_blank);
   open[s->f()].push_back(s);
 
   min = s->f();
@@ -66,11 +67,10 @@ int AStar::solve(char initial_tiles[], int initial_blank) {
     if (min < 0)
       return -1;
 
-    State* fringe = open[min].back();
+    closed[open[min].back()->state_to_string()] += 1;
+    open[min].back()->expand(temp);
+    Spool.destroy(open[min].back());
     open[min].pop_back();
-    closed[fringe->state_to_string()] += 1;
-    fringe->expand(temp);
-    delete(fringe);
 
     distribute_kids(temp);
     if (result > 0)
@@ -85,8 +85,8 @@ int AStar::solve(char initial_tiles[], int initial_blank) {
 
 int main() {
   // char tiles[] = {0, 1, 9, 7, 11, 13, 5, 3, 14, 12, 4, 2, 8, 6, 10, 15};
-  char tiles[] = {0, 13, 2, 4, 12, 14, 6, 9, 15, 1, 10, 3, 11, 5, 8, 7};
-  // vector<int> tiles{15, 2, 12, 11, 14, 13, 9, 5, 1, 3, 8, 7, 0, 10, 6, 4};
+  // char tiles[] = {0, 13, 2, 4, 12, 14, 6, 9, 15, 1, 10, 3, 11, 5, 8, 7};
+  char tiles[] = {7, 6, 8, 1, 11, 5, 14, 10, 3, 4, 9, 13, 15, 2, 0, 12};
   AStar solver;
-  cout << solver.solve(tiles, 0) << endl;
+  cout << solver.solve(tiles, 14) << endl;
 }
