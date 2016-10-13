@@ -1,4 +1,3 @@
-#include <deque>
 #include "state.cpp"
 
 class AStar {

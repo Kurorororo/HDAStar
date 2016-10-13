@@ -1,5 +1,5 @@
 #include <iostream>
-#include <vector>
+#include <deque>
 #include <unordered_map>
 #include "astar.h"
 using namespace std;
