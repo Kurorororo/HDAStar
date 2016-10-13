@@ -3,13 +3,14 @@
 
 class AStar {
 private:
-  std::vector<State*> open[200];
-  std::unordered_map<std::string, char> closed;
-  int min;
-  int result;
+  std::vector<State*> open[255];
+  std::unordered_map<long long, bool> closed;
+  unsigned char min;
+  unsigned char result;
 
   void update_min();
-  void distribute_kids(std::vector<State*>&);
+  void expand(State*);
+  void check_kid(State*);
 
 public:
   AStar();

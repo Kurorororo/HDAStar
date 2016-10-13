@@ -5,7 +5,7 @@
 using namespace std;
 
 namespace {
-  int MANHATTAN_DIST[16][16] = {
+  unsigned char MANHATTAN_DIST[16][16] = {
     {0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0},
     {1 ,0 ,1 ,2 ,2 ,1 ,2 ,3 ,3 ,2 ,3 ,4 ,4 ,3 ,4 ,5},
     {2 ,1 ,0 ,1 ,3 ,2 ,1 ,2 ,4 ,3 ,2 ,3 ,5 ,4 ,3 ,4},
@@ -29,7 +29,7 @@ namespace {
 
 State::State() {}
 
-const int State::f() {
+const unsigned char State::f() {
   return h + g;
 }
 
@@ -49,31 +49,12 @@ const void State::make_kid(State *kid, char newblank) {
   kid->g = g + 1;
 }
 
-const void State::expand(vector<State*> &kids) {
-  if (blank >= WIDTH) {
-    State* kid1 = Spool.construct();
-    make_kid(kid1, blank-WIDTH);
-    kids.push_back(kid1);
+const long long State::state_to_64bit() {
+  long long a = 0;
+  for (int i=0; i<PUZZLE_SIZE; ++i) {
+    a = (a << 4) | tiles[i];
   }
-  if (blank % WIDTH > 0) {
-    State* kid2 = Spool.construct();
-    make_kid(kid2, blank-1);
-    kids.push_back(kid2);
-  }
-  if (blank % WIDTH < WIDTH-1) {
-    State* kid3 = Spool.construct();
-    make_kid(kid3, blank+1);
-    kids.push_back(kid3);
-  }
-  if (blank < PUZZLE_SIZE-WIDTH) {
-    State* kid4 = Spool.construct();
-    make_kid(kid4, blank+WIDTH);
-    kids.push_back(kid4);
-  }
-}
-
-const string State::state_to_string() {
-  return string(tiles);
+  return a;
 }
 
 const void State::print() {

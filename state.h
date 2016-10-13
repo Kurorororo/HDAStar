@@ -1,13 +1,13 @@
 #include <vector>
 
 class State {
-private:
+public:
   static const int PUZZLE_SIZE = 16;
   static const int WIDTH = 4;
   static const int HEIGHT = 4;
-public:
-  int h;
-  int g;
+
+  unsigned char h;
+  unsigned char g;
   char blank;
   bool is_goal;
   char tiles[16];
@@ -15,9 +15,8 @@ public:
   State();
 
   void initial(char[], char);
-  inline const int f();
+  inline const unsigned char f();
   const void make_kid(State*, char);
-  const void expand(std::vector<State*>&);
-  inline const std::string state_to_string();
+  inline const long long state_to_64bit();
   const void print();
 };
