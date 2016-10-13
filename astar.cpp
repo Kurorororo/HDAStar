@@ -1,36 +1,25 @@
 #include <iostream>
 #include <vector>
-#include <map>
 #include <unordered_map>
 #include "astar.h"
 using namespace std;
-
-#if 0
-goal_state =
-{  0,  1,  2,  3,
-   4,  5,  6,  7,
-   8,  9, 10, 11,
-  12, 13, 14, 15
-}
-#endif
 
 AStar::AStar() {
   result = 255;
 }
 
 void AStar::update_min() {
-  if (open[min].empty()) {
-    for(unsigned char i=0; i<255; ++i){
-      if (!open[i].empty()) {
-        min = i;
-        break;
-      }
-     }
+  if (!open[min].empty())
+    return;
 
-    if (open[min].empty()) {
-      min = 255;
+  for (unsigned char i=min+1; i<255; ++i) {
+    if (!open[i].empty()) {
+      min = i;
+      return;
     }
   }
+
+  min = 255;
 }
 
 void AStar::expand(State* s) {
@@ -73,7 +62,6 @@ void AStar::check_kid(State* kid) {
 }
 
 int AStar::solve(char initial_tiles[], char initial_blank) {
-  // auto compare = [](State* l, State* r){ return l->g > r->g; };
   State* s = Spool.construct();
   s->initial(initial_tiles, initial_blank);
   open[s->f()].push_back(s);
@@ -101,4 +89,5 @@ int main() {
   // char tiles[] = {7, 6, 8, 1, 11, 5, 14, 10, 3, 4, 9, 13, 15, 2, 0, 12};
   AStar solver;
   cout << solver.solve(tiles, 0) << endl;
+  exit(0);
 }

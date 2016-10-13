@@ -1,9 +1,9 @@
-#include <queue>
+#include <deque>
 #include "state.cpp"
 
 class AStar {
 private:
-  std::vector<State*> open[255];
+  std::deque<State*> open[255];
   std::unordered_map<long long, bool> closed;
   unsigned char min;
   unsigned char result;

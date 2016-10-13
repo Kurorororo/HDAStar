@@ -1,5 +1,3 @@
-#include <vector>
-
 class State {
 private:
   inline const char get_tile(char);
