@@ -63,12 +63,12 @@ const void State::print() {
 
 void State::initial(char initial_tiles[], char initial_blank) {
   tiles = 0;
-  for (int i=0; i<16; ++i)
+  for (int i=0; i<PUZZLE_SIZE; ++i)
     tiles = tiles << 4 | initial_tiles[i];
   blank = initial_blank;
   h = 0;
   g = 0;
-  for (int i=0; i<16; i++) {
+  for (int i=0; i<PUZZLE_SIZE; i++) {
     h += MANHATTAN_DIST[get_tile(i)][i];
   }
 }
