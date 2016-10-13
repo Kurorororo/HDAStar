@@ -63,7 +63,7 @@ void AStar::check_kid(State* kid) {
     result = kid->g;
     return;
   }
-  if (closed[kid->state_to_64bit()]) {
+  if (closed[kid->tiles]) {
     Spool.destroy(kid);
     return;
   }
@@ -83,7 +83,7 @@ int AStar::solve(char initial_tiles[], char initial_blank) {
     if (min == 255)
       return -1;
 
-    closed[open[min].back()->state_to_64bit()] = true;
+    closed[open[min].back()->tiles] = true;
     expand(open[min].back());
 
     if (result != 255)

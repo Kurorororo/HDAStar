@@ -33,14 +33,31 @@ const unsigned char State::f() {
   return h + g;
 }
 
+const char State::get_tile(char index) {
+  return char(
+    (tiles >> 4*(15-index)) &
+    (long long)(15)
+  );
+}
+
+void State::insert_blank(char index) {
+  tiles = tiles & (~((long long)(15)<<4*(15-index)));
+}
+
+void State::insert_tile(char index, char value) {
+  insert_blank(index);
+  tiles = tiles | ((long long)(value)<<4*(15-index));
+}
+
 const void State::make_kid(State *kid, char newblank) {
-  for (int i=0; i<PUZZLE_SIZE; ++i)
-    kid->tiles[i] = tiles[i];
+  kid->tiles = tiles;
   kid->blank = newblank;
-  kid->tiles[blank] = tiles[kid->blank];
+  kid->insert_tile(blank, get_tile(kid->blank));
+  kid->insert_blank(kid->blank);
   kid->h = h;
-  kid->h -= MANHATTAN_DIST[tiles[kid->blank]][kid->blank];
-  kid->h += MANHATTAN_DIST[kid->tiles[blank]][blank];
+  kid->h -= MANHATTAN_DIST[get_tile(kid->blank)][kid->blank];
+  kid->h += MANHATTAN_DIST[kid->get_tile(blank)][blank];
+
   if (kid->h == 0) {
     kid->is_goal = true;
   } else {
@@ -49,20 +66,12 @@ const void State::make_kid(State *kid, char newblank) {
   kid->g = g + 1;
 }
 
-const long long State::state_to_64bit() {
-  long long a = 0;
-  for (int i=0; i<PUZZLE_SIZE; ++i) {
-    a = (a << 4) | tiles[i];
-  }
-  return a;
-}
-
 const void State::print() {
   for (int i=0; i<HEIGHT; ++i) {
     for (int j=0; j<WIDTH; ++j) {
-      if (tiles[i*WIDTH + j] < 10)
+      if (get_tile(i*WIDTH + j) < 10)
         cout << " ";
-      cout << to_string(tiles[i*WIDTH + j]) << " ";
+      cout << to_string(get_tile(i*WIDTH + j)) << " ";
     }
     cout << endl;
   }
@@ -70,13 +79,14 @@ const void State::print() {
 }
 
 void State::initial(char initial_tiles[], char initial_blank) {
-  for (int i=0; i<PUZZLE_SIZE; ++i)
-    tiles[i] = initial_tiles[i];
-  tiles[initial_blank] = 0;
+  tiles = 0;
+  for (int i=0; i<16; ++i)
+    tiles = tiles << 4 | initial_tiles[i];
   blank = initial_blank;
   is_goal = false;
   h = 0;
   g = 0;
-  for (int i=0; i<PUZZLE_SIZE; i++)
-    h += MANHATTAN_DIST[tiles[i]][i];
+  for (int i=0; i<16; i++) {
+    h += MANHATTAN_DIST[get_tile(i)][i];
+  }
 }
