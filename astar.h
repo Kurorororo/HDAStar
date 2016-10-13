@@ -2,7 +2,7 @@
 
 class AStar {
 private:
-  std::deque<State*> open[255];
+  std::vector<State*> open[255];
   std::unordered_map<long long, bool> closed;
   unsigned char min;
   unsigned char result;

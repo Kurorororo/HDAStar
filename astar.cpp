@@ -1,11 +1,13 @@
 #include <iostream>
-#include <deque>
+#include <vector>
 #include <unordered_map>
 #include "astar.h"
 using namespace std;
 
 AStar::AStar() {
   result = 255;
+  for (int i=0; i<255; ++i)
+    open[i].reserve(10000);
 }
 
 void AStar::update_min() {
