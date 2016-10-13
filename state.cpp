@@ -40,29 +40,12 @@ const char State::get_tile(char index) {
   );
 }
 
-void State::insert_blank(char index) {
-  tiles = tiles & (~((long long)(15)<<4*(15-index)));
-}
-
-void State::insert_tile(char index, char value) {
-  insert_blank(index);
-  tiles = tiles | ((long long)(value)<<4*(15-index));
-}
-
-const void State::make_kid(State *kid, char newblank) {
-  kid->tiles = tiles;
+const void State::make_kid(State *kid, long long &newtiles, char newblank) {
+  kid->tiles = newtiles;
   kid->blank = newblank;
-  kid->insert_tile(blank, get_tile(kid->blank));
-  kid->insert_blank(kid->blank);
   kid->h = h;
   kid->h -= MANHATTAN_DIST[get_tile(kid->blank)][kid->blank];
   kid->h += MANHATTAN_DIST[kid->get_tile(blank)][blank];
-
-  if (kid->h == 0) {
-    kid->is_goal = true;
-  } else {
-    kid->is_goal = false;
-  }
   kid->g = g + 1;
 }
 
@@ -83,10 +66,18 @@ void State::initial(char initial_tiles[], char initial_blank) {
   for (int i=0; i<16; ++i)
     tiles = tiles << 4 | initial_tiles[i];
   blank = initial_blank;
-  is_goal = false;
   h = 0;
   g = 0;
   for (int i=0; i<16; i++) {
     h += MANHATTAN_DIST[get_tile(i)][i];
   }
+}
+
+void State::insert_blank(long long &tiles, char index) {
+  tiles = tiles & (~((long long)(15)<<4*(15-index)));
+}
+
+void State::insert_tile(long long &tiles, char index, char value) {
+  insert_blank(tiles, index);
+  tiles = tiles | ((long long)(value)<<4*(15-index));
 }

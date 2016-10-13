@@ -1,8 +1,4 @@
 class State {
-private:
-  inline const char get_tile(char);
-  void insert_blank(char);
-  void insert_tile(char, char);
 public:
   static const int PUZZLE_SIZE = 16;
   static const int WIDTH = 4;
@@ -11,13 +7,15 @@ public:
   unsigned char h;
   unsigned char g;
   char blank;
-  bool is_goal;
   long long tiles;
 
   State();
 
   void initial(char[], char);
+  static void insert_blank(long long&, char);
+  static void insert_tile(long long&, char, char);
   inline const unsigned char f();
-  const void make_kid(State*, char);
+  inline const char get_tile(char);
+  const void make_kid(State*, long long&, char);
   const void print();
 };

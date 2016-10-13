@@ -7,10 +7,12 @@ private:
   std::unordered_map<long long, bool> closed;
   unsigned char min;
   unsigned char result;
+  long long tiles;
+  const long long goal = 81985529216486895;
 
   void update_min();
   void expand(State*);
-  void check_kid(State*);
+  void check_kid(State*, char);
 
 public:
   AStar();
