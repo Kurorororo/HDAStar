@@ -8,6 +8,7 @@ AStar::AStar() {
   result = 255;
   for (int i=0; i<255; ++i)
     open[i].reserve(10000);
+  closed.reserve(100000);
 }
 
 void AStar::update_min() {
@@ -89,6 +90,6 @@ int main() {
   AStar solver;
   cout << solver.solve(tiles, 0) << endl;
   // cout << solver.solve(tiles, 4) << endl;
-  // cout << solver.solve(tiles, 12) << endl;
+  // cout << solver.solve(tiles, 14) << endl;
   exit(0);
 }
