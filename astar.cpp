@@ -67,6 +67,8 @@ void AStar::check_kid(State* kid) {
     Spool.destroy(kid);
     return;
   }
+  if (kid->f() < min)
+    min = kid->f();
   open[kid->f()].push_back(kid);
 }
 
