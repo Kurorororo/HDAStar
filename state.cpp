@@ -34,10 +34,7 @@ const unsigned char State::f() {
 }
 
 const char State::get_tile(char index) {
-  return char(
-    (tiles >> 4*(15-index)) &
-    (long long)(15)
-  );
+  return get_tile(tiles, index);
 }
 
 const void State::make_kid(State *kid, long long &newtiles, char newblank) {
@@ -71,6 +68,13 @@ void State::initial(char initial_tiles[], char initial_blank) {
   for (int i=0; i<PUZZLE_SIZE; i++) {
     h += MANHATTAN_DIST[get_tile(i)][i];
   }
+}
+
+const char State::get_tile(long long &tiles, char index) {
+  return char(
+    (tiles >> 4*(15-index)) &
+    (long long)(15)
+  );
 }
 
 void State::insert_blank(long long &tiles, char index) {

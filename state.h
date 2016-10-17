@@ -12,6 +12,7 @@ public:
   State();
 
   void initial(char[], char);
+  static const char get_tile(long long&, char);
   static void insert_blank(long long&, char);
   static void insert_tile(long long&, char, char);
   inline const unsigned char f();
