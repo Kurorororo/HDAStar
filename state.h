@@ -4,19 +4,21 @@ public:
   static const int WIDTH = 4;
   static const int HEIGHT = 4;
 
-  unsigned char h;
-  unsigned char g;
-  char blank;
-  long long tiles;
+  uint8_t h;
+  uint8_t g;
+  int8_t blank;
+  int64_t tiles;
+  uint64_t hash;
 
   State();
 
-  void initial(char[], char);
-  static const char get_tile(long long&, char);
-  static void insert_blank(long long&, char);
-  static void insert_tile(long long&, char, char);
-  inline const unsigned char f();
-  inline const char get_tile(char);
-  const void make_kid(State*, long long&, char);
+  void initial(int8_t[], int8_t);
+  void initial_hash();
+  static const int8_t get_tile(int64_t&, int8_t);
+  static void insert_blank(int64_t&, int8_t);
+  static void insert_tile(int64_t&, int8_t, int8_t);
+  inline const uint8_t f();
+  inline const int8_t get_tile(int8_t);
+  const void make_kid(State*, int64_t&, int8_t);
   const void print();
 };

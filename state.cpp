@@ -2,42 +2,20 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/pool/object_pool.hpp>
 #include "state.h"
+#include "const.h"
 using namespace std;
-
-namespace {
-  unsigned char MANHATTAN_DIST[16][16] = {
-    {0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0},
-    {1 ,0 ,1 ,2 ,2 ,1 ,2 ,3 ,3 ,2 ,3 ,4 ,4 ,3 ,4 ,5},
-    {2 ,1 ,0 ,1 ,3 ,2 ,1 ,2 ,4 ,3 ,2 ,3 ,5 ,4 ,3 ,4},
-    {3 ,2 ,1 ,0 ,4 ,3 ,2 ,1 ,5 ,4 ,3 ,2 ,6 ,5 ,4 ,3},
-    {1 ,2 ,3 ,4 ,0 ,1 ,2 ,3 ,1 ,2 ,3 ,4 ,2 ,3 ,4 ,5},
-    {2 ,1 ,2 ,3 ,1 ,0 ,1 ,2 ,2 ,1 ,2 ,3 ,3 ,2 ,3 ,4},
-    {3 ,2 ,1 ,2 ,2 ,1 ,0 ,1 ,3 ,2 ,1 ,2 ,4 ,3 ,2 ,3},
-    {4 ,3 ,2 ,1 ,3 ,2 ,1 ,0 ,4 ,3 ,2 ,1 ,5 ,4 ,3 ,2},
-    {2 ,3 ,4 ,5 ,1 ,2 ,3 ,4 ,0 ,1 ,2 ,3 ,1 ,2 ,3 ,4},
-    {3 ,2 ,3 ,4 ,2 ,1 ,2 ,3 ,1 ,0 ,1 ,2 ,2 ,1 ,2 ,3},
-    {4 ,3 ,2 ,3 ,3 ,2 ,1 ,2 ,2 ,1 ,0 ,1 ,3 ,2 ,1 ,2},
-    {5 ,4 ,3 ,2 ,4 ,3 ,2 ,1 ,3 ,2 ,1 ,0 ,4 ,3 ,2 ,1},
-    {3 ,4 ,5 ,6 ,2 ,3 ,4 ,5 ,1 ,2 ,3 ,4 ,0 ,1 ,2 ,3},
-    {4 ,3 ,4 ,5 ,3 ,2 ,3 ,4 ,2 ,1 ,2 ,3 ,1 ,0 ,1 ,2},
-    {5 ,4 ,3 ,4 ,4 ,3 ,2 ,3 ,3 ,2 ,1 ,2 ,2 ,1 ,0 ,1},
-    {6 ,5 ,4 ,3 ,5 ,4 ,3 ,2 ,4 ,3 ,2 ,1 ,3 ,2 ,1 ,0}
-  };
-
-  boost::object_pool<State> Spool(100000);
-}
 
 State::State() {}
 
-const unsigned char State::f() {
+const uint8_t State::f() {
   return h + g;
 }
 
-const char State::get_tile(char index) {
+const int8_t State::get_tile(int8_t index) {
   return get_tile(tiles, index);
 }
 
-const void State::make_kid(State *kid, long long &newtiles, char newblank) {
+const void State::make_kid(State *kid, int64_t &newtiles, int8_t newblank) {
   kid->tiles = newtiles;
   kid->blank = newblank;
   kid->h = h;
@@ -58,30 +36,37 @@ const void State::print() {
   cout << endl;
 }
 
-void State::initial(char initial_tiles[], char initial_blank) {
+void State::initial(int8_t initial_tiles[], int8_t initial_blank) {
   tiles = 0;
-  for (int i=0; i<PUZZLE_SIZE; ++i)
-    tiles = tiles << 4 | initial_tiles[i];
-  blank = initial_blank;
   h = 0;
   g = 0;
-  for (int i=0; i<PUZZLE_SIZE; i++) {
+  blank = initial_blank;
+  for (int i=0; i<PUZZLE_SIZE; ++i) {
+    tiles = tiles << 4 | initial_tiles[i];
+    hash = hash ^ ZOBRIST_HASH[initial_tiles[i]][i];
     h += MANHATTAN_DIST[get_tile(i)][i];
   }
 }
 
-const char State::get_tile(long long &tiles, char index) {
-  return char(
+void State::initial_hash() {
+  hash = 0;
+  for (int i=0; i<PUZZLE_SIZE; ++i) {
+    hash = hash ^ ZOBRIST_HASH[get_tile(i)][i];
+  }
+}
+
+const int8_t State::get_tile(int64_t &tiles, int8_t index) {
+  return int8_t(
     (tiles >> 4*(15-index)) &
-    (long long)(15)
+    (int64_t)(15)
   );
 }
 
-void State::insert_blank(long long &tiles, char index) {
-  tiles = tiles & (~((long long)(15)<<4*(15-index)));
+void State::insert_blank(int64_t &tiles, int8_t index) {
+  tiles = tiles & (~((int64_t)(15)<<4*(15-index)));
 }
 
-void State::insert_tile(long long &tiles, char index, char value) {
+void State::insert_tile(int64_t &tiles, int8_t index, int8_t value) {
   insert_blank(tiles, index);
-  tiles = tiles | ((long long)(value)<<4*(15-index));
+  tiles = tiles | ((int64_t)(value)<<4*(15-index));
 }
