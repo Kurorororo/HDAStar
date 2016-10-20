@@ -3,22 +3,25 @@ public:
   static const int PUZZLE_SIZE = 16;
   static const int WIDTH = 4;
   static const int HEIGHT = 4;
+  static const int64_t GOAL = 81985529216486895;
 
+  State(uint8_t);
+  State(const State&);
+
+  static State* initial(uint8_t[], uint8_t);
+  static State* clone(const State&);
+  static void last(State*);
+  const uint8_t f();
+  const uint8_t getTile(uint8_t);
+  void insertBlank(uint8_t);
+  void insertTile(uint8_t, uint8_t);
+  bool isGoal();
+  State* makeKid(uint8_t);
+  const void print();
+
+  uint64_t tiles;
+  uint8_t blank;
   uint8_t h;
   uint8_t g;
-  int8_t blank;
-  int64_t tiles;
   uint64_t hash;
-
-  State();
-
-  void initial(int8_t[], int8_t);
-  void initial_hash();
-  static const int8_t get_tile(int64_t&, int8_t);
-  static void insert_blank(int64_t&, int8_t);
-  static void insert_tile(int64_t&, int8_t, int8_t);
-  inline const uint8_t f();
-  inline const int8_t get_tile(int8_t);
-  const void make_kid(State*, int64_t&, int8_t);
-  const void print();
 };
