@@ -24,24 +24,25 @@ class HDAStar {
 
   int updateMin();
   void expand(State*);
+  bool isClosed(const uint64_t&, uint8_t);
   void checkKid(State*);
   void createMessageStruct();
   void createControlStruct();
   void createBuffer();
   void sendMessage(int, State*);
   void recieveMessage();
-  void makeControl();
+  void sendControl();
   int checkResult(uint8_t);
   int recieveControl();
 
   std::vector<State*> open[255];
-  std::unordered_set<uint64_t> closed;
+  std::unordered_map<uint64_t, uint8_t> closed;
   uint8_t min;
   uint8_t result;
   int node_size;
   int rank;
   vector< vector<uint64_t> > zobrist_table;
-  vector<Message> message_box;
+  Message message_box;
   ControlMessage control_box;
   MPI_Datatype state_struct, message_struct, control_struct;
   Message *buff;

@@ -5,7 +5,7 @@ public:
   static const int HEIGHT = 4;
   static const int64_t GOAL = 81985529216486895;
 
-  State(uint8_t);
+  State();
   State(const State&);
 
   static State* initial(uint8_t[], uint8_t);

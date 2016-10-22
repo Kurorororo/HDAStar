@@ -5,9 +5,9 @@
 #include "const.h"
 using namespace std;
 
-State::State(uint8_t initial_blank) {
+State::State() {
   tiles = 0;
-  blank = initial_blank;
+  blank = 0;
   h = 0;
   g = 0;
   hash = 0;
@@ -22,7 +22,8 @@ State::State(const State &s) {
 }
 
 State* State::initial(uint8_t initial_tiles[], uint8_t initial_blank) {
-  State *s = Spool.construct(initial_blank);
+  State *s = Spool.construct();
+  s->blank = initial_blank;
   for (int i=0; i<PUZZLE_SIZE; ++i) {
     s->tiles = s->tiles << 4 | initial_tiles[i];
     s->hash = s->hash ^ ZOBRIST_HASH[initial_tiles[i]][i];
@@ -66,8 +67,9 @@ bool State::isGoal() {
 }
 
 State* State::makeKid(uint8_t newblank) {
-  State *kid = Spool.construct(newblank);
+  State *kid = Spool.construct();
   kid->tiles = tiles;
+  kid->blank = newblank;
   kid->insertBlank(newblank);
   kid->insertTile(blank, getTile(newblank));
   kid->h = h;
