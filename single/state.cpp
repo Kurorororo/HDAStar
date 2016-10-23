@@ -1,6 +1,4 @@
 #include <iostream>
-#include <boost/lexical_cast.hpp>
-#include <boost/pool/object_pool.hpp>
 #include "state.h"
 #include "const.h"
 using namespace std;
@@ -10,7 +8,6 @@ State::State() {
   blank = 0;
   h = 0;
   g = 0;
-  hash = 0;
 }
 
 State::State(const State &s) {
@@ -18,7 +15,6 @@ State::State(const State &s) {
   blank = s.blank;
   h = s.h;
   g = s.g;
-  hash = s.hash;
 }
 
 State* State::initial(uint8_t initial_tiles[], uint8_t initial_blank) {
@@ -26,10 +22,8 @@ State* State::initial(uint8_t initial_tiles[], uint8_t initial_blank) {
   s->blank = initial_blank;
   for (int i=0; i<PUZZLE_SIZE; ++i) {
     s->tiles = s->tiles << 4 | initial_tiles[i];
-    s->hash = s->hash ^ ZOBRIST_HASH[initial_tiles[i]][i];
     s->h += MANHATTAN_DIST[initial_tiles[i]][i];
   }
-  s->hash = s->hash ^ G_HASH[s->g];
   return s;
 }
 
@@ -76,10 +70,7 @@ State* State::makeKid(uint8_t newblank) {
   kid->h -= MANHATTAN_DIST[getTile(kid->blank)][kid->blank];
   kid->h += MANHATTAN_DIST[kid->getTile(blank)][blank];
   kid->g = g + 1;
-  kid->hash = hash ^ ZOBRIST_HASH[getTile(newblank)][newblank];
-  kid->hash = hash ^ ZOBRIST_HASH[getTile(newblank)][blank];
-  kid->hash = hash ^ G_HASH[g];
-  kid->hash = hash ^ G_HASH[g+1];
+  kid->parent = tiles;
   return kid;
 }
 

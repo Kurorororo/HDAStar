@@ -1,3 +1,5 @@
+#include <boost/pool/object_pool.hpp>
+
 class State {
 public:
   static const int PUZZLE_SIZE = 16;
@@ -23,5 +25,10 @@ public:
   uint8_t blank;
   uint8_t h;
   uint8_t g;
+  uint64_t parent;
   uint64_t hash;
 };
+
+namespace {
+  boost::object_pool<State> Spool(100000);
+}

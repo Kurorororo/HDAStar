@@ -1,24 +1,24 @@
 #include <iostream>
 #include <vector>
-#include <queue>
 #include <unordered_map>
-#include <utility>
+#include <map>
 #include <mpi.h>
 #include "hdastar.h"
 using namespace std;
 
 HDAStar::HDAStar() {
-  result = 255;
-  count = 0;
   min = 0;
+  result = 255;
+  is_end = 0;
+  count = 0;
   tmax = 0;
   local_clock = 0;
-  is_end = 0;
+  discoverd = 0;
   message_box.time_stamp = 0;
   message_box.state = State();
-  for (int i=0; i<255; ++i) {
+  for (int i=0; i<255; ++i)
     open[i].reserve(10000);
-  }
+  closed.reserve(100000);
 
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &node_size);
@@ -37,6 +37,9 @@ void HDAStar::createBuffer() {
 }
 
 int HDAStar::updateMin() {
+  if (min >= result)
+    return 0;
+
   if (!open[min].empty())
     return 1;
 
@@ -50,8 +53,8 @@ int HDAStar::updateMin() {
 }
 
 void HDAStar::expand(State *s) {
-  closed[s->tiles] = s->g;
   open[min].pop_back();
+  closed[s->tiles] = make_pair(s->g, s->tiles);
   if (s->blank >= State::WIDTH) {
     checkKid(s->makeKid(s->blank-State::WIDTH));
   }
@@ -67,10 +70,12 @@ void HDAStar::expand(State *s) {
   State::last(s);
 }
 
-bool HDAStar::isClosed(const uint64_t &tiles, uint8_t g) {
+int HDAStar::isClosed(const uint64_t &tiles, uint8_t g) {
   if (closed.find(tiles) == closed.end())
-    return false;
-  return closed[tiles] <= g;
+    return 0;
+  if (closed[tiles].first <= g)
+    return 1;
+  return 0;
 }
 
 void HDAStar::checkKid(State *kid) {
@@ -78,8 +83,9 @@ void HDAStar::checkKid(State *kid) {
     return;
 
   if (kid->isGoal()) {
+    discoverd = 1;
     result = kid->g;
-    cout << int(result) << endl;
+    min = kid->g;
     return;
   }
 
@@ -95,11 +101,11 @@ void HDAStar::checkKid(State *kid) {
 }
 
 void HDAStar::sendMessage(int dest, State *s) {
-  message_box.time_stamp = time(NULL);
+  message_box.time_stamp = local_clock;
   message_box.state = *s;
   MPI_Bsend(&message_box, sizeof(message_box), MPI_BYTE, dest, MESSAGE_TAG, MPI_COMM_WORLD);
   ++count;
-  closed[s->tiles] = s->g;
+  closed[s->tiles] = make_pair(s->g, s->tiles);
   State::last(s);
 }
 
@@ -110,7 +116,6 @@ void HDAStar::recieveMessage() {
   while (flag) {
     MPI_Recv(&message_box, sizeof(message_box), MPI_BYTE, MPI_ANY_SOURCE, MESSAGE_TAG, MPI_COMM_WORLD, &status);
     --count;
-    tmax = time(NULL);
     if (tmax < message_box.time_stamp)
       tmax = message_box.time_stamp;
 
@@ -134,13 +139,10 @@ void HDAStar::sendControl() {
   MPI_Bsend(&control_box, sizeof(control_box), MPI_BYTE,  (rank+1) % node_size, CONTROL_TAG, MPI_COMM_WORLD);
 }
 
-int HDAStar::checkResult(uint8_t result) {
+int HDAStar::isResult(uint8_t result) {
   for (uint8_t i=0; i<result; ++i) {
-    if (!open[i].empty()) {
-      for (auto s : open[i])
-        if (s->g < result)
-          return 0;
-    }
+    if (!(open[i].empty()))
+      return 0;
   }
   return 1;
 }
@@ -151,7 +153,6 @@ int HDAStar::recieveControl() {
   MPI_Iprobe(MPI_ANY_SOURCE, CONTROL_TAG, MPI_COMM_WORLD, &flag, &status);
   while (flag) {
     MPI_Recv(&control_box, sizeof(control_box), MPI_BYTE, MPI_ANY_SOURCE, CONTROL_TAG, MPI_COMM_WORLD, &status);
-    local_clock = time(NULL);
     if (local_clock < control_box.time_stamp)
       local_clock = control_box.time_stamp;
 
@@ -160,10 +161,12 @@ int HDAStar::recieveControl() {
         is_end = 1;
       return 1;
     } else {
+      if (result > control_box.result)
+        result = control_box.result;
       control_box.accu += count;
-      control_box.invalid = control_box.invalid || tmax >= control_box.time_stamp
-                          || !checkResult(result);
+      control_box.invalid = control_box.invalid || tmax >= control_box.time_stamp || !isResult(control_box.result);
       MPI_Bsend(&control_box, sizeof(control_box), MPI_BYTE, (rank+1) % node_size, CONTROL_TAG, MPI_COMM_WORLD);
+      return 1;
     }
   }
   return 0;
@@ -182,38 +185,36 @@ int HDAStar::solve(uint8_t initial_tiles[], uint8_t initial_blank) {
     }
   }
   while (true) {
-    if(recieveControl()) {
+    if(recieveControl())
       MPI_Bcast(&is_end, 1, MPI_INT, control_box.init, MPI_COMM_WORLD);
+    if (discoverd) {
+      sendControl();
     }
     if (is_end)
       return result;
 
     recieveMessage();
-
-    if (!updateMin()) {
+    if (!updateMin())
       continue;
-    }
     expand(open[min].back());
-
-    if (result != 255) {
-      sendControl();
-    }
   }
-
   return -1;
 }
 
 int main(int argc, char *argv[]) {
   MPI_Init(&argc, &argv);
-  // uint8_t tiles[] = {0, 5, 2, 3, 1, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-  uint8_t tiles[] = {0, 1, 9, 7, 11, 13, 5, 3, 14, 12, 4, 2, 8, 6, 10, 15};
-  // uint8_t tiles[] = {0, 13, 2, 4, 12, 14, 6, 9, 15, 1, 10, 3, 11, 5, 8, 7};
-  // int8_t tiles[] = {15, 10, 8, 3, 0, 6, 9, 5, 1, 14, 13, 11, 7, 2, 12, 4};
-  // int8_t tiles[] = {7, 6, 8, 1, 11, 5, 14, 10, 3, 4, 9, 13, 15, 2, 0, 12};
+  int blank;
+  cin >> blank;
+  int in_tile;
+  uint8_t tiles[16];
+  for (int i=0; i<16; ++i) {
+    cin >> in_tile;
+    tiles[i] = in_tile;
+  }
+
   HDAStar solver;
-  cout << solver.solve(tiles, 0) << endl;
-  // cout << solver.solve(tiles, 4) << endl;
-  // cout << solver.solve(tiles, 14) << endl;
+  int result = solver.solve(tiles, static_cast<uint8_t>(blank));
+  cout << result << endl;
   MPI_Finalize();
   exit(0);
 }

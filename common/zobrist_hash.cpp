@@ -1,16 +1,11 @@
 #include <iostream>
+#include <vector>
 #include <random>
-#include <unordered_map>
 #include "zobrist_hash.h"
 using namespace std;
 
-ZobristHash::ZobristHash(int f, int c) {
-  field_size = f;
-  characters = c;
-  table = vector< vector<uint64_t> >(field_size, vector<uint64_t>(characters));
-}
-
-void ZobristHash::calc_zobrist_hash() {
+vector< vector<uint64_t> > ZobristHash::calculate(int field_size, int characters) {
+  vector< vector<uint64_t> > table(characters, vector<uint64_t>(field_size));
   random_device rnd;
   mt19937_64 mt(rnd());
   for (int i=0; i<characters; ++i) {
@@ -37,23 +32,10 @@ void ZobristHash::calc_zobrist_hash() {
     cout << endl;
   }
   cout << "}" << endl;
-}
 
-void ZobristHash::n_length_randoms(int n) {
-  random_device rnd;
-  mt19937_64 mt(rnd());
-  cout << "{" << endl;
-  for (int i=0; i<n; ++i) {
-    cout << "  " << mt();
-    if (i != n)
-      cout << ",";
-    cout << endl;
-  }
-  cout << "}" << endl;
+  return table;
 }
 
 int main() {
-  ZobristHash calculater(16, 16);
-  calculater.calc_zobrist_hash();
-  calculater.n_length_randoms(255);
+  ZobristHash::calculate(16, 16);
 }
