@@ -8,6 +8,7 @@ State::State() {
   blank = 0;
   h = 0;
   g = 0;
+  parent = 0;
   hash = 0;
 }
 
