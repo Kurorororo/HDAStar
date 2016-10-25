@@ -1,7 +1,9 @@
 #include <iostream>
+#include <vector>
 #include "state.h"
-#include "const.h"
 using namespace std;
+
+vector< vector<uint8_t> >State::h_table = ManhattanDist::calculate(16, 4);
 
 State::State() {
   tiles = 0;
@@ -22,7 +24,7 @@ State* State::initial(uint8_t initial_tiles[], uint8_t initial_blank) {
   s->blank = initial_blank;
   for (int i=0; i<PUZZLE_SIZE; ++i) {
     s->tiles = s->tiles << 4 | initial_tiles[i];
-    s->h += MANHATTAN_DIST[initial_tiles[i]][i];
+    s->h += h_table[initial_tiles[i]][i];
   }
   return s;
 }
@@ -67,8 +69,8 @@ State* State::makeKid(uint8_t newblank) {
   kid->insertBlank(newblank);
   kid->insertTile(blank, getTile(newblank));
   kid->h = h;
-  kid->h -= MANHATTAN_DIST[getTile(kid->blank)][kid->blank];
-  kid->h += MANHATTAN_DIST[kid->getTile(blank)][blank];
+  kid->h -= h_table[getTile(kid->blank)][kid->blank];
+  kid->h += h_table[kid->getTile(blank)][blank];
   kid->g = g + 1;
   kid->parent = tiles;
   return kid;

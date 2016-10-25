@@ -18,7 +18,7 @@ HDAStar::HDAStar() {
   message_box.state = State();
   for (int i=0; i<255; ++i)
     open[i].reserve(10000);
-  closed.reserve(100000);
+  closed.reserve(100003);
 
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &node_size);
@@ -54,7 +54,7 @@ int HDAStar::updateMin() {
 
 void HDAStar::expand(State *s) {
   open[min].pop_back();
-  closed[s->tiles] = make_pair(s->g, s->tiles);
+  closed[s->tiles] = make_pair(s->g, s->parent);
   if (s->blank >= State::WIDTH) {
     checkKid(s->makeKid(s->blank-State::WIDTH));
   }
@@ -105,7 +105,7 @@ void HDAStar::sendMessage(int dest, State *s) {
   message_box.state = *s;
   MPI_Bsend(&message_box, sizeof(message_box), MPI_BYTE, dest, MESSAGE_TAG, MPI_COMM_WORLD);
   ++count;
-  closed[s->tiles] = make_pair(s->g, s->tiles);
+  closed[s->tiles] = make_pair(s->g, s->parent);
   State::last(s);
 }
 
@@ -151,23 +151,42 @@ int HDAStar::recieveControl() {
   int flag;
   MPI_Status status;
   MPI_Iprobe(MPI_ANY_SOURCE, CONTROL_TAG, MPI_COMM_WORLD, &flag, &status);
-  while (flag) {
-    MPI_Recv(&control_box, sizeof(control_box), MPI_BYTE, MPI_ANY_SOURCE, CONTROL_TAG, MPI_COMM_WORLD, &status);
-    if (local_clock < control_box.time_stamp)
-      local_clock = control_box.time_stamp;
+  if (!flag)
+    return 0;
 
-    if (control_box.init == rank) {
-      if (control_box.accu == 0 && !control_box.invalid)
-        is_end = 1;
-      return 1;
-    } else {
-      if (result > control_box.result)
-        result = control_box.result;
-      control_box.accu += count;
-      control_box.invalid = control_box.invalid || tmax >= control_box.time_stamp || !isResult(control_box.result);
-      MPI_Bsend(&control_box, sizeof(control_box), MPI_BYTE, (rank+1) % node_size, CONTROL_TAG, MPI_COMM_WORLD);
+  MPI_Recv(&control_box, sizeof(control_box), MPI_BYTE, MPI_ANY_SOURCE,CONTROL_TAG, MPI_COMM_WORLD, &status);
+  if (local_clock < control_box.time_stamp)
+    local_clock = control_box.time_stamp;
+
+  if (control_box.init == rank) {
+    if (control_box.accu == 0 && !control_box.invalid) {
+      sendTerminate();
       return 1;
     }
+  } else {
+    if (result > control_box.result)
+      result = control_box.result;
+    control_box.accu += count;
+    control_box.invalid = control_box.invalid || tmax >= control_box.time_stamp || !isResult(control_box.result);
+    MPI_Bsend(&control_box, sizeof(control_box), MPI_BYTE, (rank+1) %node_size, CONTROL_TAG, MPI_COMM_WORLD);
+  }
+  return 0;
+}
+
+void HDAStar::sendTerminate() {
+  int a = 1;
+  for (int i=0; i<node_size; ++i) {
+    if (i != rank)
+      MPI_Bsend(&a, 1, MPI_INT, i, TERMINATE_TAG, MPI_COMM_WORLD);
+  }
+}
+
+int HDAStar::recieveTerminate() {
+  int flag;
+  MPI_Status status;
+  MPI_Iprobe(MPI_ANY_SOURCE, TERMINATE_TAG, MPI_COMM_WORLD, &flag, &status);
+  if (flag) {
+    return 1;
   }
   return 0;
 }
@@ -176,7 +195,6 @@ int HDAStar::solve(uint8_t initial_tiles[], uint8_t initial_blank) {
   if (rank == 0) {
     State *s = State::initial(initial_tiles, initial_blank);
     int dest = s->hash % node_size;
-
     if (dest == 0) {
       open[s->f()].push_back(s);
       min = s->f();
@@ -185,14 +203,12 @@ int HDAStar::solve(uint8_t initial_tiles[], uint8_t initial_blank) {
     }
   }
   while (true) {
-    if(recieveControl())
-      MPI_Bcast(&is_end, 1, MPI_INT, control_box.init, MPI_COMM_WORLD);
+    if (recieveTerminate() || recieveControl()) {
+      return result;
+    }
     if (discoverd) {
       sendControl();
     }
-    if (is_end)
-      return result;
-
     recieveMessage();
     if (!updateMin())
       continue;
@@ -211,7 +227,6 @@ int main(int argc, char *argv[]) {
     cin >> in_tile;
     tiles[i] = in_tile;
   }
-
   HDAStar solver;
   int result = solver.solve(tiles, static_cast<uint8_t>(blank));
   cout << result << endl;

@@ -21,6 +21,7 @@ class HDAStar {
  private:
   static const int MESSAGE_TAG = 0;
   static const int CONTROL_TAG = 1;
+  static const int TERMINATE_TAG = 2;
 
   int updateMin();
   void expand(State*);
@@ -32,6 +33,8 @@ class HDAStar {
   void sendControl();
   int isResult(uint8_t);
   int recieveControl();
+  void sendTerminate();
+  int recieveTerminate();
 
   std::vector<State*> open[255];
   std::unordered_map<uint64_t, std::pair<uint8_t, uint64_t> > closed;
