@@ -22,13 +22,16 @@ class HDAStar {
   static const int MESSAGE_TAG = 0;
   static const int CONTROL_TAG = 1;
   static const int TERMINATE_TAG = 2;
+  static const int MAX_MESSAGES = 100;
 
   int updateMin();
   void expand(State*);
   int isClosed(const uint64_t&, uint8_t);
   void checkKid(State*);
   void createBuffer();
-  void sendMessage(int, State*);
+  void pushMessage(int, State*);
+  void sendMessage(int);
+  void sendAllMessages();
   void recieveMessage();
   void sendControl();
   int isResult(uint8_t);
@@ -43,11 +46,12 @@ class HDAStar {
   int is_end;
   int node_size;
   int rank;
-  Message message_box;
+  std::vector< std::vector<Message> > message_box;
+  std::vector <int> box_index;
   ControlMessage control_box;
   Message *buff;
   int count;
   int32_t tmax;
   int local_clock;
-  int discoverd;
+  int discovered;
 };
