@@ -206,9 +206,8 @@ int HDAStar::recieveTerminate() {
   int flag;
   MPI_Status status;
   MPI_Iprobe(MPI_ANY_SOURCE, TERMINATE_TAG, MPI_COMM_WORLD, &flag, &status);
-  if (flag) {
+  if (flag)
     return 1;
-  }
   return 0;
 }
 
