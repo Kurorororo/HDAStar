@@ -11,14 +11,11 @@ AStar::AStar() {
   is_end = 0;
   for (int i=0; i<255; ++i)
     open[i].reserve(10000);
-  closed.reserve(100000);
+  closed.reserve(100003);
 
 }
 
 int AStar::updateMin() {
-  if (min >= result)
-    return 0;
-
   if (!open[min].empty())
     return 1;
 
@@ -33,7 +30,7 @@ int AStar::updateMin() {
 
 void AStar::expand(State *s) {
   open[min].pop_back();
-  closed[s->tiles] = make_pair(s->g, s->tiles);
+  closed[s->tiles] = make_pair(s->g, s->parent);
   if (s->blank >= State::WIDTH) {
     checkKid(s->makeKid(s->blank-State::WIDTH));
   }

@@ -1,4 +1,5 @@
 #include <boost/pool/object_pool.hpp>
+#include "../common/manhattan_dist.h"
 
 class State {
 public:
@@ -6,6 +7,7 @@ public:
   static const int WIDTH = 4;
   static const int HEIGHT = 4;
   static const int64_t GOAL = 81985529216486895;
+  static std::vector< std::vector<uint8_t> > h_table;
 
   State();
   State(const State&);
@@ -26,7 +28,6 @@ public:
   uint8_t h;
   uint8_t g;
   uint64_t parent;
-  uint64_t hash;
 };
 
 namespace {

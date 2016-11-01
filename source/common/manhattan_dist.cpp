@@ -32,25 +32,5 @@ vector< vector<uint8_t> > ManhattanDist::calculate(int puzzle_size, int width) {
   for (int i=0; i<puzzle_size; ++i)
     for (int j=0; j<puzzle_size; ++j)
       table[i][j] = calculatePartial(i, j, width);
-
-  cout << "{" << endl;
-  for (int i=0; i<puzzle_size; ++i) {
-    cout << "  {";
-    for(int j=0; j<puzzle_size; j++) {
-      cout << int(table[i][j]);
-      if (j != puzzle_size-1)
-        cout << " ,";
-    }
-    cout << "}";
-    if (i != puzzle_size-1)
-      cout << ",";
-    cout << endl;
-  }
-  cout << "}" << endl;
-
   return table;
-}
-
-int main() {
-  ManhattanDist::calculate(16, 4);
 }
